@@ -28,6 +28,7 @@
 #include <glib/gi18n.h>
 
 struct NautilusDesktopWindowDetails {
+	gulong focus_in_id;
 	gulong size_changed_id;
 };
 
@@ -70,6 +71,13 @@ nautilus_desktop_window_init (NautilusDesktopWindow *window)
 			   GINT_TO_POINTER (1));
 	gtk_window_set_title (GTK_WINDOW (window), _("Desktop"));
 	gtk_window_set_icon_name (GTK_WINDOW (window), "user-desktop");
+}
+
+static void
+nautilus_desktop_window_focus_in (GtkWidget* widget, GdkEventFocus *event,
+        gpointer user_data)
+{
+	gdk_window_lower (gtk_widget_get_window (widget));
 }
 
 static void
@@ -177,6 +185,10 @@ realize (GtkWidget *widget)
 
 	/* This is the new way to set up the desktop window */
 	set_wmspec_desktop_hint (gtk_widget_get_window (widget));
+
+	details->focus_in_id =
+		g_signal_connect (window, "focus-in-event",
+				  G_CALLBACK (nautilus_desktop_window_focus_in), window);
 
 	details->size_changed_id =
 		g_signal_connect (gtk_window_get_screen (GTK_WINDOW (window)), "size-changed",
